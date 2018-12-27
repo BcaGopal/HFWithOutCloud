@@ -1,0 +1,298 @@
+﻿@model Service.MaterialBalanceUpDateViewModel
+@using System.Text.RegularExpressions
+@{
+    ViewBag.Title = "MaterialBalanceUpdate";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    .grid {
+        width: 1140px;
+        height: 80vh;
+    }
+
+    .ui-grid-cell {
+        border-style: solid;
+        border-width: thin;
+    }
+
+    .text-right {
+        text-align: right;
+        /*float: right;*/
+    }
+
+    .cell-text {
+        font-size: 13px;
+        font-weight: normal;
+    }
+
+    .header-text {
+        font-size: 13px;
+    }
+
+
+    .ui-grid-viewport .ui-grid-cell-contents {
+        word-wrap: break-word;
+        white-space: normal !important;
+    }
+
+    .ui-grid-row, .ui-grid-cell {
+        /*height: 60px !important;*/
+        height: auto;
+    }
+    
+
+        .ui-grid-row div[role=row] {
+            display: flex;
+            align-content: stretch;
+        }
+
+    .ui-grid-header-cell-label {
+        display: inline-block;
+        white-space: initial;
+    }
+
+    .Errormsg {
+        color: red;
+        text-align: center;
+    }
+</style>
+
+
+<!doctype html>
+<html ng-app="MaterialBalanceJobWorker">
+<head>
+    <title>
+        UI-Grid
+    </title>
+    <script src="~/Scripts/angular.js"></script>
+    <script src="~/Scripts/angular-touch.js"></script>
+    <script src="~/Scripts/angular-animate.js"></script>
+    <script data-require="angular.js@1.4.x" src="https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.4.6/angular.min.js" data-semver="1.4.6"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/csv.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/pdfmake.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/vfs_fonts.js"></script>
+    <script src="http://ui-grid.info/release/ui-grid-unstable.js"></script>
+    <link rel="stylesheet" href="http://ui-grid.info/release/ui-grid-unstable.css" type="text/css">
+    <script src="~/Scripts/JSTable/jspdf.debug.js"></script>
+    <script src="~/Scripts/JSTable/faker.min.js"></script>
+    <script src="~/Scripts/JSTable/jspdf.plugin.autotable.js"></script>
+    <script src="~/Scripts/JSTable/examples.js"></script>
+
+    <script src="http://ui-grid.info/docs/grunt-scripts/lodash.min.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/jszip.min.js"></script>
+    <script src="http://ui-grid.info/docs/grunt-scripts/excel-builder.dist.js"></script>
+</head>
+<body id="MyBody">
+    <div ng-controller="MainCtrl" ng-init="BindData()">
+        <div class="panel panel-default" style="margin-bottom:0px">
+            <div class="panel-heading">
+                <h4>
+                    <span>Stock Balance At JobWorker</span>
+
+                    <div class="btn-group right" style="margin-right:-10px;" >
+                        <a class="btn btn-primary btn-sm CurveBorder height" aria-expanded="false" style="padding-top: 6px;padding-bottom: 6px;width:5em; margin-left:2px; margin-right:2px" href="#" data-toggle="dropdown" id="dropdownMenu1"  >
+                            Actions
+                        </a>
+                        <ul class="dropdown-menu pull-right" aria-labelledby="dropdownMenu1">
+                            <li><a id="btnCreateF" data-modal=""  ng-click="Post()" href="" ><span class="glyphicon glyphicon-copyright-mark"> </span>  Job Consume</a></li>
+                        </ul>
+                    </div>
+
+
+
+                    @*<div class="btn-group right" style="margin-right:-10px;" >
+                        <a class="cbtn btn-circle glyphicon glyphicon-link dropdown-toggle" aria-expanded="false" style="padding-top: 6px;padding-bottom: 6px;" href="#" data-toggle="dropdown" id="dropdownMenu1">
+                        </a>
+                        <ul class="dropdown-menu pull-right" aria-labelledby="dropdownMenu1">
+                            <li><a id="btnCreateF" data-modal=""  ng-click="Post()" href="" ><span class="glyphicon glyphicon-copyright-mark"> </span>  Job Consume</a></li>
+                        </ul>
+                    </div>*@
+                   
+                    @*<input type="submit" id="Consume" value="Consume" ng-click="Post()"   class="btn btn-primary btn-sm CurveBorder height" style="float : right ; width:5em; background-color: #2980b9;margin-left:2px;" />
+                    <span></span>*@
+                   
+                    <input type="submit" id="Fill" value="Fill" ng-click="BindData()" class="btn btn-primary btn-sm CurveBorder height" style="float : right ; width:5em; background-color: #2980b9;" />
+                   
+                    <span role="button" id="ShowFilters">
+                        <span class="btn btn-primary btn-sm CurveBorder height" style="float : right ; width:5em; background-color: #2980b9; margin-right:2px" />
+                        Filters
+                    </span>
+                 </h4>
+            </div>
+            <form action="/" id="registerSubmit">
+                <div class="panel-info" style="padding-left:15px">
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.TextHidden)
+                    @Html.HiddenFor(m => m.ReportHeaderCompanyDetail.CompanyName)
+                    @Html.HiddenFor(m => m.ReportHeaderCompanyDetail.Address)
+                    @Html.HiddenFor(m => m.ReportHeaderCompanyDetail.CityName)
+                    @Html.HiddenFor(m => m.ReportHeaderCompanyDetail.Phone)
+                    @Html.HiddenFor(m => m.ReportHeaderCompanyDetail.LogoBlob)
+                    <div class="form-horizontal" role="form" id="ReportFilters">
+                        @Html.ValidationSummary(true)
+                        <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.AsOnDate, "As on Date", new { @class = "control-label col-md-4 col-sm-2" })
+                                            <div class="col-xs-6">
+                                                @Html.TextBoxFor(m => m.AsOnDate, "{0:dd/MMMM/yyyy}", new { @class = "datepicker form-control col-xs-6 " })
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.JobWorker, "Job Worker Name", new { @class = "control-label col-md-4 col-sm-2" })
+                                            <div class="col-xs-6">
+                                                @Html.TextBoxFor(m => m.JobWorker, null, new { @class = "form-control col-xs-6" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.Process, "Process", new { @class = "control-label col-md-4 col-sm-2" })
+                                            <div class="col-xs-6">
+                                                @Html.TextBoxFor(m => m.Process, null, new { @class = "form-control col-xs-6 " })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.CostCenter, "Cost Center", new { @class = "control-label col-md-4 col-sm-2" })
+                                            <div class="col-xs-6">
+                                                @Html.TextBoxFor(m => m.CostCenter, null, new { @class = "form-control col-xs-6 " })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.Product, "Product", new { @class = "control-label col-md-4 col-sm-2" })
+                                            <div class="col-xs-6">
+                                                @Html.TextBoxFor(m => m.Product, null, new { @class = "form-control col-xs-6" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.Dimension1Name, "Size", new { @class = "control-label col-md-4 col-sm-2" })
+                                            <div class="col-xs-6">
+                                                @Html.TextBoxFor(m => m.Dimension1Name, null, new { @class = "form-control col-xs-6 " })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.Dimension2Name, "Style", new { @class = "control-label col-md-4 col-sm-2" })
+                                            <div class="col-xs-6">
+                                                @Html.TextBoxFor(m => m.Dimension2Name, null, new { @class = "form-control col-xs-6" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.Dimension3Name, "Shade", new { @class = "control-label col-md-4 col-sm-2" })
+                                            <div class="col-xs-6">
+                                                @Html.TextBoxFor(m => m.Dimension3Name, null, new { @class = "form-control col-xs-6 " })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.Dimension4Name, "Fabric", new { @class = "control-label col-md-4 col-sm-2" })
+                                            <div class="col-xs-6">
+                                                @Html.TextBoxFor(m => m.Dimension4Name, null, new { @class = "form-control col-xs-6" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.NegativeBalance, "Negative Balance", new { @class = "control-label col-md-4 col-sm-2" })
+                                            <div class="col-xs-6">
+                                                @Html.CheckBoxFor(m => m.NegativeBalance, new { @class = "checkbox col-xs-1", @id = "NegativeBalance" })
+                                                @Html.ValidationMessageFor(model => model.NegativeBalance)
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-md-offset-2 col-md-10">
+                                    <span style="font-family: Calibri,sans-serif,Verdana;font-size:large">
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tableDiv"></div>
+                    </div>
+                    </div>
+                    
+          </form>
+    </div>
+
+
+        @*<div ui-grid="gridOptions" ui-grid-exporter ui-grid-resize-columns ui-grid-move-columns ui-grid-cellnav ui-grid-pinning ui-grid-save-state  ui-grid-tree-view class="grid" style="margin-top:0px"></div>*@
+
+        <div  ui-grid="gridOptions" ui-grid-selection ui-grid-exporter ui-grid-cellnav ui-grid-resize-columns ui-grid-move-columns ui-grid-pinning  class="grid" style="margin-top:0px"></div>
+    </div>
+    <script src="~/Scripts/JobConsumption/JobConsumption.js"></script>
+    <script src="~/Scripts/ui-grid.js"></script>
+    <link href="~/Content/ui-grid.css" rel="stylesheet" />
+   
+</body>
+</html>
+<script type="text/javascript">
+    CustomSelectFunction($("#JobWorker"), '/ComboHelpList/GetPerson', '/ComboHelpList/SetSinglePerson', ' ', false, 0);
+    CustomSelectFunction($("#Process"), '/ComboHelpList/GetProcess', '/ComboHelpList/SetSingleProcess', ' ', false, 0);
+    CustomSelectFunction($("#Product"), '/ComboHelpList/GetProducts', '/ComboHelpList/SetSingleProducts', ' ', false, 0);
+    CustomSelectFunction($("#Dimension1Name"), '/ComboHelpList/GetDimension1', '/ComboHelpList/SetSingleDimension1', ' ', false, 0);
+    CustomSelectFunction($("#Dimension2Name"), '/ComboHelpList/GetDimension2', '/ComboHelpList/SetSingleDimension2', ' ', false, 0);
+    CustomSelectFunction($("#Dimension3Name"), '/ComboHelpList/GetDimension3', '/ComboHelpList/SetSingleDimension3', ' ', false, 0);
+    CustomSelectFunction($("#Dimension4Name"), '/ComboHelpList/GetDimension4', '/ComboHelpList/SetSingleDimension4', ' ', false, 0);
+    CustomSelectFunction($("#CostCenter"), '/ComboHelpList/GetCostCenter', '/ComboHelpList/SetSingleCostCenter', ' ', false, 0);
+    $(document).ready(function () {
+        var div = document.getElementById('ReportFilters');
+        if (div.style.display !== 'none') {
+            $("#ReportFilters").toggle();
+         //  $("#Consume").hide();
+        }
+    });
+    
+ $('#Fill').click(function () {
+        var div = document.getElementById('ReportFilters');
+        if (div.style.display !== 'none') {
+            $("#ReportFilters").toggle();
+        }
+ });
+ 
+   $('#ShowFilters').click(function () {
+        $('#ReportFilters').slideToggle();
+    });
+  $(function () {
+
+        $('[data-toggle="tooltip"]').tooltip({
+        });
+  function SetDate(url, elem) {
+            $.get(url, function (data) {
+                $(elem).datepicker('update', data);
+            })
+       }
+  });
+   $('.collapse').on('hidden.bs.collapse', toggleSign);
+   $('.collapse').on('shown.bs.collapse', toggleSign);
+ function toggleSign(e) {
+        $(e.target).prev('.panel-heading').find('span.collapse_Ico').toggleClass("glyphicon-plus-sign glyphicon-minus-sign")
+    }
+ $(document).on("mouseover", ".select2-container", function () {
+        $(".select2-container").tooltip({
+            title: function () {
+                return $(this).next('input').attr("title");
+            },
+        });
+    })
+</script>
+

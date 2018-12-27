@@ -1,0 +1,535 @@
+﻿@model Model.ViewModel.JobOrderMasterDetailModel
+@using Core.Common
+
+<div class="modal-content  Custom-modal">
+    <div class="modal-header" style="border-bottom: 1px solid #8E8888">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true"> <span class="glyphicon glyphicon-remove"></span></button>
+        <h3>
+            <span style="font-family: Calibri,sans-serif,Verdana;font-weight:bold" class="black"><span class="glyphicon glyphicon-file black"></span> Orders & Quantities</span>
+        </h3>
+    </div>
+    <div>
+        @using (Html.BeginForm("_ResultsPost", "JobOrderLine", FormMethod.Post, new { enctype = "multipart/form-data", id = "modform" }))
+        {
+            @Html.ValidationLog((string)TempData["CSEXCL"])
+
+            @Html.AntiForgeryToken()
+
+            <div class="form-horizontal modal-body">
+                @Html.HiddenFor(m => m.JobOrderSettings.isVisibleRate)
+                @Html.HiddenFor(m => m.JobOrderSettings.ProcessId)
+                @Html.HiddenFor(m => m.JobOrderSettings.ExcessQtyAllowedPer)
+                <div style="padding-right:15px">
+                    <div class="row">
+                            <div class="form-horizontal">
+                                @Html.ValidationSummary(true, null, new { @class = "alert alert-danger" })
+
+                                <div class="panel panel-default" id="grid">
+                                    <div class="panel-heading headrow" style="background-image: -webkit-linear-gradient(top, #428bca 0%, #428bca 100%);color:white">
+                                        <div class="row grid-head">
+                                            <div class="col-xs-1 text-left">
+                                                Srl.
+                                            </div>
+                                            <div class="col-xs-11">
+                                                <div class="row">
+                                                    @*ProductInfo*@
+                                                    <div class="col-sm-5">
+                                                        Product
+
+                                                    </div>
+                                                    <div class="col-sm-2 text-right">
+                                                        @if (Model.DocumentTypeSettings.ContraDocTypeCaption != null)
+                                                        {
+                                                        @Model.DocumentTypeSettings.ContraDocTypeCaption
+                                                        }
+                                                        else
+                                                        {
+                                                        @Html.Raw("Plan")
+                                                        }
+                                                        No.
+                                                    </div>
+                                                    @*Qty*@
+
+                                                    <div class="col-sm-3 text-right" style="padding-right:30px">
+                                                        <a href="#" id="ToOrder" style="color:white">Order Qty</a>
+                                                    </div>
+                                                    <div class="col-sm-2 text-right" style="padding-right:30px;">
+                                                        Rate
+                                                    </div>
+                                                    @*<div class="col-sm-2 text-right" style="padding-right:30px">
+                                                        Loss<br /> NC-Qty
+                                                    </div>
+                                                    <div class="col-sm-2 text-right">
+                                                        Multiplier
+                                                    </div>*@
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+                                    <div class="panel-info" id="gbody" style="max-height:250px;overflow-y:scroll">
+                                        @{
+                            decimal OrderQty = 0;
+                            decimal ProdQty = 0;
+                            int MaxUnitDecplaces = 0;
+                            int MaxDealUnitDecplaces = 0;
+                                        }
+                                        @for (int i = 0; i < Model.JobOrderLineViewModel.Count(); i++)
+                                        {
+                                            <div class='row crow grid-body' style='margin-left:0px;margin-right:0px'>
+
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].ProductId, new { @class = "ProdId" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].ProductName, new { @class = "ProdName" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].DealUnitId)
+
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].Specification)
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].Dimension1Name, new { @class = "Dim1Name" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].Dimension1Id, new { @class = "Dim1Id" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].Dimension2Name, new { @class = "Dim2Name" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].Dimension2Id, new { @class = "Dim2Id" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].Dimension3Name, new { @class = "Dim3Name" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].Dimension3Id, new { @class = "Dim3Id" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].Dimension4Name, new { @class = "Dim4Name" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].Dimension4Id, new { @class = "Dim4Id" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].ProdOrderLineId)
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].PlanNo)
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].StockInId)
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].FromProcessId)
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].JobOrderHeaderId)
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].ProdOrderDocNo)
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].ProdOrderBalanceQty)
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].UnitId)
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].SalesTaxGroupProductId)
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].SalesTaxGroupPersonId)
+
+
+                                                @*@Html.HiddenFor(m => Model.JobOrderLineViewModel[i].UnitConversionMultiplier)*@
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].UnitDecimalPlaces, new { @class = "UDec" })
+                                                @Html.HiddenFor(m => Model.JobOrderLineViewModel[i].DealUnitDecimalPlaces, new { @class = "DelUDec" })
+
+                                                @if (MaxDealUnitDecplaces < Model.JobOrderLineViewModel[i].DealUnitDecimalPlaces)
+                                                {
+                                                    MaxDealUnitDecplaces = Model.JobOrderLineViewModel[i].DealUnitDecimalPlaces;
+                                                }
+                                                @if (MaxUnitDecplaces < Model.JobOrderLineViewModel[i].UnitDecimalPlaces)
+                                                {
+                                                    MaxUnitDecplaces = Model.JobOrderLineViewModel[i].UnitDecimalPlaces;
+                                                }
+
+
+                                                <div class='col-xs-1 row-index'>
+                                                    @(i + 1)
+                                                    <input type='hidden' class='id' value="@Model.JobOrderLineViewModel[i].JobOrderHeaderId" />
+                                                </div>
+                                                <div class='col-xs-11'>
+                                                    <div class='row'>
+                                                        @*<div class='col-sm-5 block  ReplacableProduct'>
+                                                            <strong>@Model.JobOrderLineViewModel[i].ProductName</strong>
+                                                            <span style="font-size:xx-small;cursor:pointer;padding-left:5px" class="text-info glyphicon glyphicon-pencil EditProduct"></span>
+                                                            <br />
+                                                            @Model.JobOrderLineViewModel[i].Specification
+                                                            @{
+                                                var Dim1 = (string.IsNullOrEmpty(Model.JobOrderLineViewModel[i].Dimension1Name)) ? "" : Model.JobOrderLineViewModel[i].Dimension1Name + ",";
+                                                var Dim2 = (string.IsNullOrEmpty(Model.JobOrderLineViewModel[i].Dimension2Name)) ? "" : Model.JobOrderLineViewModel[i].Dimension2Name + ",";
+                                                var Dim3 = (string.IsNullOrEmpty(Model.JobOrderLineViewModel[i].Dimension3Name)) ? "" : Model.JobOrderLineViewModel[i].Dimension3Name + ",";
+                                                var Dim4 = (string.IsNullOrEmpty(Model.JobOrderLineViewModel[i].Dimension4Name)) ? "" : Model.JobOrderLineViewModel[i].Dimension4Name;
+                                                            }
+
+                                                            @Dim1 @Dim2 @Dim3 @Dim4
+                                                            <div>
+                                                            </div>
+                                                        </div>*@
+
+
+                                                        <div class='col-sm-5 block'>
+                                                            <div class="row">
+                                                                <div class="block  ReplacableProduct" style="width: 100%; padding-left: 15px">
+                                                                    @Model.JobOrderLineViewModel[i].ProductName
+                                                                    <span style="font-size:xx-small;cursor:pointer;padding-left:5px" class="text-info glyphicon glyphicon-pencil EditProduct"></span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row" style="margin-top:5px;">
+                                                                <div class="block ReplacableDim1" style="width:50%;padding-left:15px;padding-right:0px">
+                                                                    @if (!string.IsNullOrEmpty(Model.JobOrderLineViewModel[i].Dimension1Name))
+                                                                    {
+                                                                        @Model.JobOrderLineViewModel[i].Dimension1Name<span style="font-size:xx-small;cursor:pointer;padding-left:5px" class="text-info glyphicon glyphicon-pencil EditDim1"></span> 
+                                                                    }
+                                                                </div>
+                                                                <div class="block ReplacableDim2" style="width:50%;padding-left:0px;padding-right:15px">
+                                                                    @if (!string.IsNullOrEmpty(Model.JobOrderLineViewModel[i].Dimension2Name))
+                                                                    {
+                                                                        @Model.JobOrderLineViewModel[i].Dimension2Name<span style="font-size:xx-small;cursor:pointer;padding-left:5px" class="text-info glyphicon glyphicon-pencil EditDim2"></span>
+                                                                    }
+                                                                </div>
+                                                                <div class="block ReplacableDim3" style="width:50%;padding-left:0px;padding-right:15px">
+                                                                    @if (!string.IsNullOrEmpty(Model.JobOrderLineViewModel[i].Dimension3Name))
+                                                                    {
+                                                                        @Model.JobOrderLineViewModel[i].Dimension3Name<span style="font-size:xx-small;cursor:pointer;padding-left:5px" class="text-info glyphicon glyphicon-pencil EditDim3"></span>
+                                                                    }
+                                                                </div>
+                                                                <div class="block ReplacableDim4" style="width:50%;padding-left:0px;padding-right:15px">
+                                                                    @if (!string.IsNullOrEmpty(Model.JobOrderLineViewModel[i].Dimension4Name))
+                                                                    {
+                                                                        @Model.JobOrderLineViewModel[i].Dimension4Name<span style="font-size:xx-small;cursor:pointer;padding-left:5px" class="text-info glyphicon glyphicon-pencil EditDim4"></span>
+                                                                    }
+                                                                </div>
+                                                                <div style="width:50%;padding-left:0px;padding-right:15px">
+                                                                    @if (!string.IsNullOrEmpty(Model.JobOrderLineViewModel[i].PlanNo))
+                                                                    {
+                                                                        @Model.JobOrderLineViewModel[i].PlanNo<span style="font-size:xx-small;cursor:pointer;padding-left:5px"></span>
+                                                                    }
+                                                                    }
+                                                                </div>
+                                                                <div style="width:50%;padding-left:0px;padding-right:15px">
+                                                                    @if (!string.IsNullOrEmpty(Model.JobOrderLineViewModel[i].PlanNo))
+                                                                    {
+                                                                        @Model.JobOrderLineViewModel[i].PlanNo<span style="font-size:xx-small;cursor:pointer;padding-left:5px"></span>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-2  text-right">
+                                                            @Model.JobOrderLineViewModel[i].ProdOrderDocNo
+                                                            <br />
+                                                            <a href="#" class="ToOrder" style="color:black">
+                                                                <span id="ProdQty"> @string.Format("{" + "0:0.".PadRight(@Model.JobOrderLineViewModel[i].UnitDecimalPlaces + 4, '0') + "}", Model.JobOrderLineViewModel[i].ProdOrderBalanceQty)</span>
+                                                                <small>@Model.JobOrderLineViewModel[i].UnitId</small>
+                                                            </a>
+                                                            @{ProdQty += Model.JobOrderLineViewModel[i].ProdOrderBalanceQty;}
+                                                        </div>
+
+                                                        <div class="col-md-3 text-right">
+                                                            @Html.TextBoxFor(m => Model.JobOrderLineViewModel[i].Qty, new { @class = "form-control multiple-modal text-right OrderQty" })
+                                                            @Html.ValidationMessageFor(m => Model.JobOrderLineViewModel[i].Qty, "", new { @class = "text-danger" })
+                                                            @{OrderQty += Model.JobOrderLineViewModel[i].Qty;}
+                                                        </div>
+                                                        <div class='col-sm-2 text-right'>
+                                                            @Html.TextBoxFor(m => Model.JobOrderLineViewModel[i].Rate, new { @class = "form-control multiple-modal text-right" })
+                                                            @Html.ValidationMessageFor(m => Model.JobOrderLineViewModel[i].Rate, null, new { @class = "text-danger" })
+                                                        </div>
+                                                        @*<div class="col-sm-2 text-right">
+                                                            @Html.TextBoxFor(m => Model.JobOrderLineViewModel[i].LossQty, new { @class = "form-control multiple-modal text-right", @style = "display:inline;margin-bottom:3px" })
+                                                            <br />
+                                                            @Html.TextBoxFor(m => m.JobOrderLineViewModel[i].NonCountedQty, new { @class = "form-control multiple-modal text-right", @style = "display:inline" })
+                                                        </div>
+
+                                                        <div class='col-sm-2 text-right'>
+                                                            @Html.TextBoxFor(m => Model.JobOrderLineViewModel[i].UnitConversionMultiplier, "{0:0.0000}", new { @class = "form-control multiple-modal text-right" })
+                                                        </div>*@
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <hr style='margin-top:0px;margin-bottom:0px' />
+                                        }
+                                    </div>
+                                </div>
+
+
+                                <div class="row grid-head" style='margin-left:0px;margin-right:0px'>
+                                    <div class="col-xs-1 text-left">
+                                    </div>
+                                    <div class="col-xs-11">
+                                        <div class="row">
+                                            @*ProductInfo*@
+                                            <div class="col-sm-5">
+                                                <strong>Total</strong>
+                                            </div>
+
+                                            @*Qty*@
+                                            <div class="col-sm-2 text-center">
+                                                @string.Format("{" + "0:0.".PadRight(MaxUnitDecplaces + 4, '0') + "}", ProdQty)
+                                            </div>
+                                            <div class="col-sm-3 text-right" style="padding-right:30px">
+                                                <strong><span id="OrderQty">@string.Format("{" + "0:0.".PadRight(MaxDealUnitDecplaces + 4, '0') + "}", OrderQty)</span></strong>
+                                            </div>
+                                            <div class="col-sm-2 text-right" style="padding-right:30px">
+
+                                            </div>
+                                            <div class="col-sm-2 text-right">
+
+                                            </div>
+                                            <div class="col-sm-2">
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                    </div>
+                </div>
+                <div class="modal-footer " style="padding: 19px 20px 0 20px; border-top:1px solid #8E8888">
+                    <button class="btn custom" name="Command:Edit" type="submit" id="submit"><h2 style="margin:0px" title="Proceed"><span class="glyphicon glyphicon-floppy-disk black black"></span> </h2></button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+
+
+
+<script type="text/javascript">
+
+
+    $(function () {
+
+        CustomSelectFunction($(".ProdHelpList"), '/ComboHelpList/GetProducts', '/ComboHelpList/SetSingleProducts', 'Enter Product', false, 3);
+        CustomSelectFunction($(".Dime1HelpList"), '/ComboHelpList/GetDimension1', '/ComboHelpList/SetSingleDimension1', 'Enter Dimension1', false, 3);
+        CustomSelectFunction($(".Dime2HelpList"), '/ComboHelpList/GetDimension2', '/ComboHelpList/SetSingleDimension2', 'Enter Dimension2', false, 3);
+        CustomSelectFunction($(".Dime3HelpList"), '/ComboHelpList/GetDimension3', '/ComboHelpList/SetSingleDimension3', 'Enter Dimension3', false, 3);
+        CustomSelectFunction($(".Dime4HelpList"), '/ComboHelpList/GetDimension4', '/ComboHelpList/SetSingleDimension4', 'Enter Dimension4', false, 3);
+
+        $(document).on('change', '.ProdHelpList,.Dime1HelpList,.Dime2HelpList,.Dime3HelpList,.Dime4HelpList', function () {
+            var $Block = $(this).closest('div.row.crow');
+        })
+    });
+
+    var IsSaved = false;
+    var reset = false;
+    var ValidationCount = 0;
+
+    $('#modform').bind('submit', function (event) {
+
+        if (!IsSaved) {
+            if (!ValidateData()) {
+                return false;
+            }
+            IsSaved = true;
+            $('button:submit').attr('disabled', 'disabled');
+            return IsSaved;
+        }
+        else {
+            return false;
+        }
+
+
+    });
+
+
+    function ValidateData() {
+        var ValidationMessage = "";
+
+        //Client Side Validaion.....
+
+        return (ValidationMessage == "");
+
+    }
+
+
+    $('.EditProduct').click(function () {
+        var $Block = $(this).closest('div.row.crow');
+        var ProdId = parseInt($Block.find('input.ProdId').val());
+        var ProdName = $Block.find('input.ProdName').val();
+
+        if (ProdId && ProdName) {
+            var ProdElemId = $Block.find('input.ProdId').attr('id');
+            var ProdElemName = $Block.find('input.ProdId').attr('name');
+            $Block.find('input.ProdId').remove();
+            var elem = '<input type="text" class="form-control multiple-modal ProdHelpList ProdId" style="display:inline;margin-bottom:3px" tabindex="-1" id="' + ProdElemId + '" name="' + ProdElemName + '"/>'
+            var Container = $Block.find('div.ReplacableProduct:first');
+            console.log(elem);
+
+            Container.html(elem);
+            CustomSelectFunction($('.ProdHelpList', $Block), '/ComboHelpList/GetProducts', '/ComboHelpList/SetSingleProducts', 'Enter Product', false, 3);
+            $('.ProdHelpList', $Block).select2("data", { id: ProdId, text: ProdName });
+        }
+
+    })
+
+    $('.EditDim1').click(function () {
+
+        var $Block = $(this).closest('div.row.crow');
+        var Dim1Id = parseInt($Block.find('input.Dim1Id').val());
+        var Dim1Name = $Block.find('input.Dim1Name').val();
+
+        if (Dim1Id && Dim1Name) {
+            var Dim1ElemId = $Block.find('input.Dim1Id').attr('id');
+            var Dim1ElemName = $Block.find('input.Dim1Id').attr('name');
+
+            $Block.find('input.Dim1Id').remove();
+            var elem = '<input type="text" class="form-control multiple-modal Dime1HelpList Dim1Id" style="display:inline;" tabindex="-1" id="' + Dim1ElemId + '" name="' + Dim1ElemName + '"/>'
+            var Container = $Block.find('div.ReplacableDim1:first');
+            Container.html(elem);
+            CustomSelectFunction($(".Dime1HelpList", $Block), '/ComboHelpList/GetDimension1', '/ComboHelpList/SetSingleDimension1', 'Enter Dimension1', false, 3);
+            $('.Dime1HelpList', $Block).select2("data", { id: Dim1Id, text: Dim1Name });
+        }
+    })
+
+    $('.EditDim2').click(function () {
+
+        var $Block = $(this).closest('div.row.crow');
+        var Dim2Id = parseInt($Block.find('input.Dim2Id').val());
+        var Dim2Name = $Block.find('input.Dim2Name').val();
+
+        if (Dim2Id && Dim2Name) {
+            var Dim2ElemId = $Block.find('input.Dim2Id').attr('id');
+            var Dim2ElemName = $Block.find('input.Dim2Id').attr('name');
+
+            $Block.find('input.Dim2Id').remove();
+            var elem = '<input type="text" class="form-control multiple-modal Dime2HelpList Dim2Id" style="display:inline;" tabindex="-1" id="' + Dim2ElemId + '" name="' + Dim2ElemName + '"/>'
+            var Container = $Block.find('div.ReplacableDim2:first');
+            Container.html(elem);
+            CustomSelectFunction($(".Dime2HelpList", $Block), '/ComboHelpList/GetDimension2', '/ComboHelpList/SetSingleDimension2', 'Enter Dimension2', false, 3);
+            $('.Dime2HelpList', $Block).select2("data", { id: Dim2Id, text: Dim2Name });
+        }
+    })
+
+
+
+
+    $('.EditDim3').click(function () {
+
+        var $Block = $(this).closest('div.row.crow');
+        var Dim3Id = parseInt($Block.find('input.Dim3Id').val());
+        var Dim3Name = $Block.find('input.Dim3Name').val();
+
+        if (Dim3Id && Dim3Name) {
+            var Dim3ElemId = $Block.find('input.Dim3Id').attr('id');
+            var Dim3ElemName = $Block.find('input.Dim3Id').attr('name');
+
+            $Block.find('input.Dim3Id').remove();
+            var elem = '<input type="text" class="form-control multiple-modal Dime3HelpList Dim3Id" style="display:inline;" tabindex="-1" id="' + Dim3ElemId + '" name="' + Dim3ElemName + '"/>'
+            var Container = $Block.find('div.ReplacableDim3:first');
+            Container.html(elem);
+            CustomSelectFunction($(".Dime3HelpList", $Block), '/ComboHelpList/GetDimension3', '/ComboHelpList/SetSingleDimension3', 'Enter Dimension3', false, 3);
+            $('.Dime3HelpList', $Block).select2("data", { id: Dim3Id, text: Dim3Name });
+        }
+    })
+
+    $('.EditDim4').click(function () {
+
+        var $Block = $(this).closest('div.row.crow');
+        var Dim4Id = parseInt($Block.find('input.Dim4Id').val());
+        var Dim4Name = $Block.find('input.Dim4Name').val();
+
+        if (Dim4Id && Dim4Name) {
+            var Dim4ElemId = $Block.find('input.Dim4Id').attr('id');
+            var Dim4ElemName = $Block.find('input.Dim4Id').attr('name');
+
+            $Block.find('input.Dim4Id').remove();
+            var elem = '<input type="text" class="form-control multiple-modal Dime4HelpList Dim4Id" style="display:inline;" tabindex="-1" id="' + Dim4ElemId + '" name="' + Dim4ElemName + '"/>'
+            var Container = $Block.find('div.ReplacableDim4:first');
+            Container.html(elem);
+            CustomSelectFunction($(".Dime4HelpList", $Block), '/ComboHelpList/GetDimension4', '/ComboHelpList/SetSingleDimension4', 'Enter Dimension4', false, 3);
+            $('.Dime4HelpList', $Block).select2("data", { id: Dim4Id, text: Dim4Name });
+        }
+    })
+
+
+
+
+
+
+    $('input.OrderQty').change(function () {
+
+        var $div = $(this).closest('div.row');
+        var ProdQty = parseFloat($div.find('#ProdQty').text()) || 0;
+
+        var OrderQty = parseFloat($div.find('input.OrderQty').val()) || 0;
+
+
+        var ExcessQtyAllowed = 0;
+        if ($('#JobOrderSettings_ExcessQtyAllowedPer').val() != null && $('#JobOrderSettings_ExcessQtyAllowedPer').val() != 0) {
+            ExcessQtyAllowed = ProdQty * $('#JobOrderSettings_ExcessQtyAllowedPer').val() / 100;
+        }
+
+        var bal = (OrderQty) - (ProdQty + ExcessQtyAllowed);
+        //var bal = (OrderQty) - (ProdQty);
+
+        if (bal > 0) {
+            if (!$('#modform').find('.modal-body #errormsg').length) {
+                $('#modform').find('#submit').attr('disabled', 'disabled');
+                $('#modform').find('.modal-body').prepend("<div class='alert alert-danger'><span id=errormsg >Qty exceeding Plan Qty</span></div>")
+            }
+            else {
+                $('#modform').find('#errormsg').text("Qty exceeding Required Qty");
+            }
+        }
+        else {
+            $('#modform').find('#submit:disabled').removeAttr('disabled');
+            if ($('#modform').find('.modal-body #errormsg').length) {
+                $('#modform').find('#errormsg').parent().remove();
+            }
+        }
+        CalculateTotal();
+
+    })
+
+    function CalculateTotal() {
+        var Order = 0;
+        var maxDeclaces = 0;
+        $('.row.crow.grid-body', '.modal-body').each(function () {
+
+            if ($(this).find('input.OrderQty').val()) {
+                Order += parseFloat($(this).find('input.OrderQty').val());
+                var $Hidiv = $(this).closest('div.row.crow');
+                var unitDecPlaces = parseFloat($Hidiv.find('.DelUDec').val()) || 0;
+                if (unitDecPlaces > maxDeclaces)
+                    maxDeclaces = unitDecPlaces;
+            }
+
+        })
+        $('#OrderQty', '.modal-body').text(Order.toFixed(maxDeclaces));
+    }
+
+
+    $('.ToOrder').click(function () {
+
+        var $Hidiv = $(this).closest('div.row.crow');
+
+        var unitDecPlaces = parseFloat($Hidiv.find('.UDec').val()) || 0;
+
+        var $div = $(this).closest('div.row');
+
+        var OrderQty = parseFloat($div.find('#ProdQty').text()) || 0;
+
+        if ($div.find('input.OrderQty').val() && $div.find('input.OrderQty').val() > 0) {
+            $div.find('input.OrderQty').val(0);
+        }
+
+        else {
+            $div.find('input.OrderQty').val(OrderQty.toFixed(unitDecPlaces));
+        }
+
+
+
+
+        CalculateTotal();
+
+    })
+
+    $('#ToOrder').click(function () {
+        if (reset) {
+            $('div.row.crow', "#gbody.panel-info").each(function (index) {
+
+
+                var $Hidiv = $(this);
+
+                var unitDecPlaces = parseFloat($Hidiv.find('.UDec').val()) || 0;
+
+                var OrderQty = parseFloat($Hidiv.find('#ProdQty').text()) || 0;
+
+                $Hidiv.find('input.OrderQty').val(OrderQty.toFixed(unitDecPlaces));
+
+
+            })
+            CalculateTotal();
+            reset = false;
+        }
+        else if (!reset) {
+            $('div.row.crow', "#gbody.panel-info").each(function (index) {
+
+                var $Hidiv = $(this);
+                $Hidiv.find('input.OrderQty').val(0);
+
+            })
+            CalculateTotal();
+            reset = true;
+        }
+    })
+
+</script>
